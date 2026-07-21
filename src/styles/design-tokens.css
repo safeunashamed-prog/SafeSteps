@@ -1,0 +1,261 @@
+/* ═══════════════════════════════════════════════════════════════
+   SafeSteps Design Tokens
+   Trauma-informed daily support app — warm, gentle, empowering.
+   Mobile-first. No harsh colors, no clinical feel.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Color Palette ─────────────────────────────────────────── */
+
+  /* Primary: soft pinks (blush → rose → dusty pink) */
+  --color-pink-50:  #FEF5F5;
+  --color-pink-100: #FDE8E9;
+  --color-pink-200: #F9C8CA;
+  --color-pink-300: #F3A0A4;
+  --color-pink-400: #EB7479;
+  --color-pink-500: #E24E53;  /* Primary accent — warm rose */
+  --color-pink-600: #D43B41;
+  --color-pink-700: #B82F34;
+  --color-pink-800: #9A272B;
+
+  /* Sage greens — grounding & growth */
+  --color-sage-50:  #F4F7F3;
+  --color-sage-100: #E4EDE0;
+  --color-sage-200: #C8DCC2;
+  --color-sage-300: #A5C79C;
+  --color-sage-400: #81B075;
+  --color-sage-500: #699A5C;  /* Primary sage */
+  --color-sage-600: #577E4B;
+  --color-sage-700: #45643C;
+  --color-sage-800: #37502F;
+
+  /* Warm creams — comfort & safety */
+  --color-cream-50:  #FFFCF7;
+  --color-cream-100: #FFF9ED;
+  --color-cream-200: #FFF3D6;
+  --color-cream-300: #FFEAB8;
+  --color-cream-400: #F5DEA4;
+  --color-cream-500: #E2C983;
+  --color-cream-600: #C4AC66;
+  --color-cream-700: #A68E4A;
+
+  /* Muted blues — trust & calm */
+  --color-blue-50:  #F4F6FA;
+  --color-blue-100: #E4EAF4;
+  --color-blue-200: #C8D4E9;
+  --color-blue-300: #A5B8D9;
+  --color-blue-400: #7D98C7;
+  --color-blue-500: #5E7BAE;  /* Primary blue */
+  --color-blue-600: #4C6594;
+  --color-blue-700: #3C5076;
+  --color-blue-800: #2E3D5B;
+
+  /* Sunflower yellow — hope & warmth (used sparingly) */
+  --color-sunflower-50:  #FFFCF3;
+  --color-sunflower-100: #FFF7D6;
+  --color-sunflower-200: #FFEEA8;
+  --color-sunflower-300: #FDE47A;
+  --color-sunflower-400: #F5D54E;
+  --color-sunflower-500: #E2BF2B;
+  --color-sunflower-600: #C4A422;
+  --color-sunflower-700: #9E841B;
+
+  /* Neutrals */
+  --color-neutral-50:  #FAF9F7;
+  --color-neutral-100: #F3F1ED;
+  --color-neutral-200: #E7E3DB;
+  --color-neutral-300: #D5CFC4;
+  --color-neutral-400: #B8B0A2;
+  --color-neutral-500: #9A9180;
+  --color-neutral-600: #7D7465;
+  --color-neutral-700: #635C50;
+  --color-neutral-800: #4A4439;
+  --color-neutral-900: #312D26;
+
+  /* ── Semantic Color Tokens ─────────────────────────────────── */
+
+  /* Backgrounds */
+  --color-bg-primary:        var(--color-cream-50);
+  --color-bg-secondary:      var(--color-cream-100);
+  --color-bg-card:           #FFFFFF;
+  --color-bg-card-alt:       var(--color-pink-50);
+  --color-bg-elevated:       #FFFFFF;
+  --color-bg-overlay:        rgba(74, 68, 57, 0.12);  /* neutral-800 at 12% */
+
+  /* Text */
+  --color-text-primary:      var(--color-neutral-900);
+  --color-text-secondary:    var(--color-neutral-600);
+  --color-text-tertiary:     var(--color-neutral-400);
+  --color-text-on-primary:   #FFFFFF;
+  --color-text-on-accent:    #FFFFFF;
+  --color-text-link:         var(--color-blue-600);
+
+  /* Buttons */
+  --color-btn-calm-bg:       var(--color-pink-500);
+  --color-btn-calm-text:     #FFFFFF;
+  --color-btn-calm-hover:    var(--color-pink-600);
+  --color-btn-safe-bg:       var(--color-blue-500);
+  --color-btn-safe-text:     #FFFFFF;
+  --color-btn-safe-hover:    var(--color-blue-600);
+  --color-btn-grow-bg:       var(--color-sage-500);
+  --color-btn-grow-text:     #FFFFFF;
+  --color-btn-grow-hover:    var(--color-sage-600);
+  --color-btn-warm-bg:       var(--color-cream-200);
+  --color-btn-warm-text:     var(--color-neutral-800);
+  --color-btn-warm-hover:    var(--color-cream-300);
+  --color-btn-ghost-bg:      transparent;
+  --color-btn-ghost-text:    var(--color-blue-600);
+  --color-btn-ghost-hover:   var(--color-blue-50);
+
+  /* Borders */
+  --color-border-subtle:     var(--color-neutral-200);
+  --color-border-default:    var(--color-neutral-300);
+  --color-border-focus:      var(--color-pink-400);
+
+  /* Feedback — note: NO red; use amber for warnings, sage for success */
+  --color-feedback-success:  var(--color-sage-600);
+  --color-feedback-info:     var(--color-blue-600);
+  --color-feedback-warning:  var(--color-cream-600);
+  --color-feedback-error:    var(--color-pink-400);
+
+  /* ── Typography ────────────────────────────────────────────── */
+
+  --font-family-body:   -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                        Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue',
+                        sans-serif;
+  --font-family-heading: var(--font-family-body);
+
+  /* Type scale — generous for readability during distress */
+  --text-xs:    0.75rem;   /* 12px — captions only */
+  --text-sm:    0.875rem;  /* 14px — secondary labels */
+  --text-base:  1rem;      /* 16px — body minimum */
+  --text-md:    1.125rem;  /* 18px — preferred body */
+  --text-lg:    1.25rem;   /* 20px — buttons, prominent labels */
+  --text-xl:    1.5rem;    /* 24px — small headings */
+  --text-2xl:   1.75rem;   /* 28px — medium headings */
+  --text-3xl:   2rem;      /* 32px — large headings */
+  --text-4xl:   2.5rem;    /* 40px — hero/logo */
+
+  --font-weight-normal:  400;
+  --font-weight-medium:  500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:    700;
+
+  --line-height-tight:   1.2;
+  --line-height-normal:  1.5;
+  --line-height-relaxed: 1.7;
+
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide:   0.02em;
+
+  /* ── Spacing Scale ─────────────────────────────────────────── */
+
+  --space-1:  0.25rem;   /*  4px */
+  --space-2:  0.5rem;    /*  8px */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-5:  1.25rem;   /* 20px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+
+  /* Touch targets — minimum 48px (apple HIG / material) */
+  --touch-min: 3rem;     /* 48px */
+  --touch-comfortable: 3.5rem;  /* 56px */
+
+  /* ── Border Radius ─────────────────────────────────────────── */
+
+  --radius-sm:     0.5rem;   /*  8px */
+  --radius-md:     0.75rem;  /* 12px */
+  --radius-lg:     1rem;     /* 16px */
+  --radius-xl:     1.25rem;  /* 20px */
+  --radius-2xl:    1.5rem;   /* 24px */
+  --radius-3xl:    2rem;     /* 32px */
+  --radius-full:   9999px;
+
+  /* Component-specific */
+  --radius-card:     var(--radius-lg);
+  --radius-button:   var(--radius-2xl);
+  --radius-input:    var(--radius-lg);
+  --radius-chip:     var(--radius-full);
+  --radius-modal:    var(--radius-xl);
+
+  /* ── Shadows ───────────────────────────────────────────────── */
+
+  /* Soft and gentle — nothing harsh */
+  --shadow-card:      0 1px 3px rgba(74, 68, 57, 0.06),
+                      0 2px 8px rgba(74, 68, 57, 0.04);
+  --shadow-card-hover: 0 2px 6px rgba(74, 68, 57, 0.08),
+                       0 4px 16px rgba(74, 68, 57, 0.06);
+  --shadow-button:    0 1px 2px rgba(74, 68, 57, 0.08);
+  --shadow-button-hover: 0 2px 4px rgba(74, 68, 57, 0.10),
+                        0 4px 12px rgba(74, 68, 57, 0.06);
+  --shadow-modal:     0 4px 12px rgba(74, 68, 57, 0.08),
+                       0 8px 32px rgba(74, 68, 57, 0.06);
+  --shadow-none:      0 0 0 0 transparent;
+
+  /* ── Transitions & Animation ───────────────────────────────── */
+
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:  cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-default: ease;
+
+  --duration-fast:    150ms;
+  --duration-normal:  250ms;
+  --duration-slow:    350ms;
+  --duration-gentle:  500ms;
+
+  --transition-press:  transform var(--duration-fast) var(--ease-out);
+  --transition-hover:  background-color var(--duration-normal) var(--ease-default),
+                       box-shadow var(--duration-normal) var(--ease-default);
+  --transition-color:  color var(--duration-normal) var(--ease-default),
+                       background-color var(--duration-normal) var(--ease-default),
+                       border-color var(--duration-normal) var(--ease-default);
+  --transition-modal:  opacity var(--duration-normal) var(--ease-out),
+                       transform var(--duration-normal) var(--ease-out);
+
+  /* ── Z-Index Scale ─────────────────────────────────────────── */
+
+  --z-base:     0;
+  --z-above:    1;
+  --z-sticky:   100;
+  --z-overlay:  200;
+  --z-modal:    300;
+  --z-toast:    400;
+  --z-tooltip:  500;
+
+  /* ── Layout ────────────────────────────────────────────────── */
+
+  --container-sm:  375px;   /* phone */
+  --container-md:  414px;   /* large phone */
+  --container-lg:  768px;   /* tablet */
+  --container-max: 1024px;  /* desktop max */
+
+  --content-padding-x: var(--space-6);
+  --content-padding-y: var(--space-8);
+
+  /* ── Focus Ring ────────────────────────────────────────────── */
+
+  --focus-ring-color:  var(--color-pink-400);
+  --focus-ring-width:  3px;
+  --focus-ring-offset: 2px;
+  --focus-ring:        0 0 0 var(--focus-ring-offset) var(--color-bg-primary),
+                        0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width))
+                           var(--focus-ring-color);
+}
+
+/* ── Dark Mode (future — subtle warm dark, not harsh black) ── */
+/*
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg-primary:    #1E1B18;
+    --color-bg-secondary:  #252220;
+    --color-bg-card:       #2C2925;
+    --color-text-primary:  #F3F1ED;
+    --color-text-secondary: #B8B0A2;
+  }
+}
+*/
