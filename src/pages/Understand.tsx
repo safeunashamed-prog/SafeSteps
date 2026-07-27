@@ -122,7 +122,7 @@ const TRAUMA_RESPONSES: Record<ResponseType, Omit<TraumaResponse, 'patternText'>
     explanation:
       'An emotional flashback is when you feel the same intense emotions you felt during a past trauma — but without remembering the memory itself. Your body is reliving the feeling, even though your mind isn\'t replaying the event. This is why a boss\'s criticism can feel as devastating as something that happened years ago. Your nervous system doesn\'t know the difference between "then" and "now" — it just knows the feeling is familiar and tries to protect you.',
     suggestions: [
-      'Gently remind yourself: "I am Safe Steps. The danger I\'m feeling is from the past, not the present."',
+      'Gently remind yourself: "I am safe. The danger I\'m feeling is from the past, not the present."',
       'Look around and name 3 things you can see. This helps orient your brain to the present moment.',
       'Place your hand on your chest. Feel your breath moving in and out. Your body is with you right now.',
     ],
