@@ -60,6 +60,17 @@
   --color-sunflower-600: #C4A422;
   --color-sunflower-700: #9E841B;
 
+  /* Warm amber/gold — sunrise/sunset warmth (Daily Check-In accent) */
+  --color-amber-50:  #FFFBF3;
+  --color-amber-100: #FFF6E0;
+  --color-amber-200: #FFEDC0;
+  --color-amber-300: #FFDF96;
+  --color-amber-400: #F5CD5E;
+  --color-amber-500: #E2B73B;
+  --color-amber-600: #C49A22;
+  --color-amber-700: #9E7B19;
+  --color-amber-800: #7A5E14;
+
   /* Muted lavender/purple — insight & reflection (Trigger Tracker accent) */
   --color-lavender-50:  #F7F5FA;
   --color-lavender-100: #EEE9F5;
