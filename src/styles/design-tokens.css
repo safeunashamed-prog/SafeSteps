@@ -60,6 +60,17 @@
   --color-sunflower-600: #C4A422;
   --color-sunflower-700: #9E841B;
 
+  /* Muted lavender/purple — insight & reflection (Trigger Tracker accent) */
+  --color-lavender-50:  #F7F5FA;
+  --color-lavender-100: #EEE9F5;
+  --color-lavender-200: #DDD3EC;
+  --color-lavender-300: #C7B4E0;
+  --color-lavender-400: #AD90D1;
+  --color-lavender-500: #9470BD;
+  --color-lavender-600: #7C56A8;
+  --color-lavender-700: #64428C;
+  --color-lavender-800: #4E336E;
+
   /* Neutrals */
   --color-neutral-50:  #FAF9F7;
   --color-neutral-100: #F3F1ED;
