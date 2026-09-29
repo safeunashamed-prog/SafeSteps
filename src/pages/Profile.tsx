@@ -24,6 +24,22 @@ import {
   verifyBiometric,
   clearBiometric,
 } from '../lib/privacy';
+import {
+  clearAllData,
+  collectAllData,
+  downloadFile,
+  encryptExport,
+  encryptionAvailable,
+  exportFilename,
+} from '../lib/dataPrivacy';
+import {
+  hasCheckedInToday,
+  loadReminderPrefs,
+  notificationPermission,
+  requestNotificationPermission,
+  saveReminderPrefs,
+  type PermissionState,
+} from '../lib/reminders';
 
 /* ═══════════════════════════════════════════════════════════════
    Profile & Settings — Profile info, Privacy & Safety (PIN lock),
@@ -137,6 +153,7 @@ function Field({
   placeholder,
   inputMode,
   autoComplete,
+  type = 'text',
 }: {
   id: string;
   label: string;
@@ -145,6 +162,7 @@ function Field({
   placeholder?: string;
   inputMode?: 'text' | 'tel' | 'numeric';
   autoComplete?: string;
+  type?: 'text' | 'password';
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -160,7 +178,7 @@ function Field({
       </label>
       <input
         id={id}
-        type="text"
+        type={type}
         inputMode={inputMode}
         autoComplete={autoComplete}
         value={value}
@@ -641,12 +659,13 @@ function ContactSheet({
   );
 }
 
-/** Gentle confirmation sheet (used for removing a contact). */
+/** Gentle confirmation sheet (used for removing a contact, clearing data). */
 function ConfirmSheet({
   title,
   body,
   confirmLabel,
   cancelLabel,
+  busy = false,
   onConfirm,
   onCancel,
 }: {
@@ -654,20 +673,21 @@ function ConfirmSheet({
   body: string;
   confirmLabel: string;
   cancelLabel: string;
+  busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
   return (
-    <BottomSheet onCancel={onCancel}>
+    <BottomSheet onCancel={busy ? () => undefined : onCancel}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
         <div>
           <CardTitle>{title}</CardTitle>
           <CardNote>{body}</CardNote>
         </div>
-        <ActionButton variant="danger" onClick={onConfirm}>
-          {confirmLabel}
+        <ActionButton variant="danger" onClick={onConfirm} disabled={busy}>
+          {busy ? 'One moment…' : confirmLabel}
         </ActionButton>
-        <ActionButton variant="warm" onClick={onCancel}>
+        <ActionButton variant="warm" onClick={onCancel} disabled={busy}>
           {cancelLabel}
         </ActionButton>
       </div>
@@ -994,6 +1014,14 @@ const headerStyle: React.CSSProperties = {
   flexShrink: 0,
 };
 
+/** Quiet tertiary note used under switches and actions. */
+const hintNoteStyle: React.CSSProperties = {
+  fontSize: 'var(--text-sm)',
+  color: 'var(--color-text-tertiary)',
+  margin: 0,
+  lineHeight: 'var(--line-height-relaxed)',
+};
+
 const scrollContentStyle: React.CSSProperties = {
   flex: 1,
   overflowY: 'auto',
@@ -1003,16 +1031,19 @@ const scrollContentStyle: React.CSSProperties = {
   gap: '24px',
 };
 
-/** Switch row used for the (optional) biometric toggle. */
+/** Switch row used for the optional biometric toggle and reminders. */
 function SwitchRow({
   label,
   hint,
+  status,
   checked,
   disabled,
   onChange,
 }: {
   label: string;
   hint: string;
+  /** Current state in plain words, e.g. "Reminders are on". */
+  status?: string;
   checked: boolean;
   disabled?: boolean;
   onChange: (next: boolean) => void;
@@ -1047,6 +1078,18 @@ function SwitchRow({
         >
           {hint}
         </div>
+        {status && (
+          <div
+            style={{
+              fontSize: 'var(--text-sm)',
+              color: 'var(--color-text-tertiary)',
+              lineHeight: 'var(--line-height-relaxed)',
+              marginTop: '4px',
+            }}
+          >
+            {status}
+          </div>
+        )}
       </div>
       <button
         role="switch"
@@ -1106,6 +1149,48 @@ export default function Profile() {
   const [bioSupported, setBioSupported] = useState(false);
   const [bioOn, setBioOn] = useState(() => getBiometricRecord() !== null);
   const [bioBusy, setBioBusy] = useState(false);
+
+  /* Data & privacy */
+  const [exporting, setExporting] = useState(false);
+  const [protectExport, setProtectExport] = useState(false);
+  const [exportPassword, setExportPassword] = useState('');
+  const [clearSheetOpen, setClearSheetOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const canEncrypt = encryptionAvailable();
+
+  /* Reminders */
+  const [remindersOn, setRemindersOn] = useState(() => loadReminderPrefs().enabled);
+  const [permission, setPermission] = useState<PermissionState>(() => notificationPermission());
+  const [reminderBusy, setReminderBusy] = useState(false);
+  const [checkedInToday, setCheckedInToday] = useState<boolean | null>(null);
+  const [reminderHidden, setReminderHidden] = useState(false);
+
+  // Permission can change in browser settings while the app is open.
+  useEffect(() => {
+    const sync = () => setPermission(notificationPermission());
+    window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', sync);
+    return () => {
+      window.removeEventListener('focus', sync);
+      document.removeEventListener('visibilitychange', sync);
+    };
+  }, []);
+
+  // The gentle in-app note only appears when the reminder is on and
+  // today has no check-in yet — so it can never nag.
+  useEffect(() => {
+    if (!remindersOn) {
+      setCheckedInToday(null);
+      return;
+    }
+    let alive = true;
+    void hasCheckedInToday().then((done) => {
+      if (alive) setCheckedInToday(done);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [remindersOn]);
 
   useEffect(() => {
     let alive = true;
@@ -1209,6 +1294,112 @@ export default function Profile() {
     setRemoveTarget(null);
   }, [removeTarget]);
 
+  /* ── Data & privacy ───────────────────────────────────────── */
+
+  const handleDownloadData = useCallback(async () => {
+    setExporting(true);
+    try {
+      const data = await collectAllData();
+      const total = Object.values(data.counts).reduce((sum, n) => sum + n, 0);
+
+      if (protectExport && canEncrypt) {
+        try {
+          const encrypted = await encryptExport(data, exportPassword);
+          downloadFile(encrypted, exportFilename(true));
+          setExportPassword('');
+          setToast(
+            'Saved to your downloads, locked with your password. It is a .enc.json file — keep the password somewhere safe.',
+          );
+        } catch {
+          // Web Crypto said no. Never quietly hand back an unprotected file.
+          setProtectExport(false);
+          setToast(
+            "This device couldn't make an encrypted file just now. You can still download your copy without a password.",
+          );
+        }
+        return;
+      }
+
+      downloadFile(JSON.stringify(data, null, 2), exportFilename());
+      setToast(
+        total > 0
+          ? `Saved to your downloads — ${total} ${total === 1 ? 'entry' : 'entries'}, all yours to keep.`
+          : 'Saved to your downloads. There was nothing saved yet, so it is a small, empty file for now.',
+      );
+    } catch {
+      setToast("Hmm — the file didn't come together just now. You might try again in a moment.");
+    } finally {
+      setExporting(false);
+    }
+  }, [protectExport, canEncrypt, exportPassword]);
+
+  const handleClearData = useCallback(async () => {
+    setClearing(true);
+    const result = await clearAllData();
+    setClearing(false);
+    setClearSheetOpen(false);
+
+    // Re-read everything so the page settles back to empty.
+    setName('');
+    setNameDraft('');
+    setContacts(loadContacts());
+    setCheckedInToday(null);
+    setRemindersOn(loadReminderPrefs().enabled);
+
+    setToast(
+      result.remoteFailed
+        ? "Cleared from this device. Your account entries may still be there — you can try again when you're online."
+        : "Cleared. Nothing of yours is saved here anymore.",
+    );
+  }, []);
+
+  /* ── Reminders ────────────────────────────────────────────── */
+
+  const handleReminderToggle = useCallback(
+    async (next: boolean) => {
+      if (!next) {
+        saveReminderPrefs(false);
+        setRemindersOn(false);
+        setToast('Okay — the daily reminder is off. Turn it back on whenever you like.');
+        return;
+      }
+
+      setReminderBusy(true);
+      const result = await requestNotificationPermission();
+      setReminderBusy(false);
+      setPermission(result);
+
+      if (result === 'denied') {
+        saveReminderPrefs(false);
+        setRemindersOn(false);
+        setToast('No worries — you can change this in your browser settings whenever you like.');
+        return;
+      }
+
+      saveReminderPrefs(true);
+      setRemindersOn(true);
+      setReminderHidden(false);
+      setToast(
+        result === 'granted'
+          ? 'Your reminder is on. A soft nudge, only when it might help.'
+          : 'Your reminder is on. It will appear as a quiet note inside SafeSteps.',
+      );
+    },
+    [],
+  );
+
+  const reminderStatus = !remindersOn
+    ? 'Off for now.'
+    : permission === 'granted'
+      ? 'Reminders are on, and this browser can show notifications.'
+      : permission === 'denied'
+        ? 'Reminders are on. Browser notifications are off, so your nudge stays inside SafeSteps.'
+        : permission === 'unsupported'
+          ? "Reminders are on. This browser can't show notifications, so your nudge stays inside SafeSteps."
+          : 'Reminders are on.';
+
+  const showReminderNote = remindersOn && checkedInToday === false && !reminderHidden;
+
   const pinOn = pinRecord?.enabled === true;
   const nameUnchanged = nameDraft.trim() === name;
 
@@ -1254,6 +1445,56 @@ export default function Profile() {
 
       {/* Scrollable content */}
       <div style={scrollContentStyle}>
+        {/* ── Gentle reminder note (only when one is wanted and today is open) ── */}
+        {showReminderNote && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px',
+              padding: '16px',
+              borderRadius: 'var(--radius-card)',
+              background: 'var(--color-sage-50)',
+              border: '1px solid var(--color-sage-200)',
+              boxShadow: 'var(--shadow-card)',
+            }}
+          >
+            <span style={{ fontSize: '22px', lineHeight: 1.3, flexShrink: 0 }} aria-hidden="true">
+              🌿
+            </span>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div>
+                <div
+                  style={{
+                    fontSize: 'var(--text-md)',
+                    fontWeight: 600,
+                    color: 'var(--color-text-primary)',
+                    lineHeight: 'var(--line-height-tight)',
+                  }}
+                >
+                  No check-in yet today
+                </div>
+                <p style={{ ...hintNoteStyle, color: 'var(--color-text-secondary)', marginTop: '6px' }}>
+                  Whenever it suits you, a few gentle questions might help you notice how today is
+                  sitting with you. Only if it feels useful — there's no rush.
+                </p>
+              </div>
+              <ActionButton variant="sage" onClick={() => navigate('/check-in')}>
+                Go to today's check-in
+              </ActionButton>
+            </div>
+            <button
+              onClick={() => setReminderHidden(true)}
+              aria-label="Hide this note"
+              style={{ ...iconBtnStyle, color: 'var(--color-text-tertiary)', width: '40px', height: '40px' }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="18" height="18">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
         {/* ── 1. Profile info ─────────────────────────────── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <span style={sectionLabelStyle}>Profile info</span>
@@ -1484,6 +1725,115 @@ export default function Profile() {
             </p>
           </div>
         </div>
+
+        {/* ── 4. Data & Privacy ────────────────────────────── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <span style={sectionLabelStyle}>Data &amp; Privacy</span>
+
+          <SectionCard>
+            <div>
+              <CardTitle>Your data, in your hands</CardTitle>
+              <CardNote>
+                You can take a copy of everything SafeSteps has saved for you — your check-ins,
+                insights, triggers, victories, your name and your contacts. It comes as one file
+                that lands in your downloads, for you to keep somewhere safe. Nothing is sent
+                anywhere, and you can do this as often as you like.
+              </CardNote>
+            </div>
+
+            <SwitchRow
+              label="Password-protect this file"
+              hint="Locks the file with a password only you know. You'll need that password to open it again, so keep it somewhere you trust."
+              checked={protectExport && canEncrypt}
+              disabled={exporting || !canEncrypt}
+              onChange={setProtectExport}
+              status={
+                canEncrypt
+                  ? undefined
+                  : "This browser can't lock a file right now, so this one stays off. You can still download your copy."
+              }
+            />
+
+            {protectExport && canEncrypt && (
+              <Field
+                id="export-password"
+                label="Password for this file"
+                type="password"
+                value={exportPassword}
+                onChange={setExportPassword}
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
+              />
+            )}
+
+            <ActionButton
+              variant="sage"
+              onClick={() => void handleDownloadData()}
+              disabled={exporting || (protectExport && canEncrypt && exportPassword.trim().length < 8)}
+            >
+              {exporting
+                ? 'Getting your file ready…'
+                : protectExport && canEncrypt
+                  ? 'Download locked copy'
+                  : 'Download my data'}
+            </ActionButton>
+
+            {protectExport && canEncrypt && exportPassword.length > 0 && exportPassword.length < 8 && (
+              <p style={hintNoteStyle}>
+                A few more characters would make it harder for anyone else to guess — eight or more
+                is a good place to land.
+              </p>
+            )}
+          </SectionCard>
+
+          <SectionCard>
+            <div>
+              <CardTitle>Clear my data</CardTitle>
+              <CardNote>
+                This removes your saved entries from this device and your account. There&apos;s no
+                undo — if you&apos;d like a copy first, you might download your data above.
+              </CardNote>
+            </div>
+            <ActionButton variant="danger" onClick={() => setClearSheetOpen(true)}>
+              Clear my data
+            </ActionButton>
+            <p style={hintNoteStyle}>
+              Your PIN and any fingerprint or face unlock stay as they are, so clearing data never
+              quietly unlocks the app. You can change those just above.
+            </p>
+          </SectionCard>
+        </div>
+
+        {/* ── 5. Reminders ─────────────────────────────────── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <span style={sectionLabelStyle}>Reminders</span>
+          <SectionCard>
+            <div>
+              <CardTitle>A nudge, only if you want one</CardTitle>
+              <CardNote>
+                Some people find a soft reminder helps them keep a small daily habit going. It&apos;s
+                entirely optional, it never repeats, and it turns off the moment you ask it to.
+              </CardNote>
+            </div>
+
+            <SwitchRow
+              label="Gentle daily check-in reminder"
+              hint="A soft nudge, only if you want it. You can turn it off anytime."
+              checked={remindersOn}
+              disabled={reminderBusy}
+              onChange={(next) => void handleReminderToggle(next)}
+              status={reminderStatus}
+            />
+
+            <p style={hintNoteStyle}>
+              To be plain about it: SafeSteps can&apos;t send a notification at a set time on its
+              own. Turning this on asks your browser&apos;s permission (for reminders we&apos;re
+              still building) and shows the quiet note above — visible next time you open the app,
+              and only when you haven&apos;t checked in yet that day. Nothing is scheduled, so
+              nothing arrives while you&apos;re away.
+            </p>
+          </SectionCard>
+        </div>
       </div>
 
       {/* Bottom nav */}
@@ -1525,6 +1875,19 @@ export default function Profile() {
           cancelLabel="Keep them"
           onConfirm={handleContactRemove}
           onCancel={() => setRemoveTarget(null)}
+        />
+      )}
+
+      {/* Clear-data confirmation */}
+      {clearSheetOpen && (
+        <ConfirmSheet
+          title="Clear your saved data?"
+          body="This removes your check-ins, insights, triggers, victories, your name and your contacts — from this device and your account. There's no undo. If you'd like to keep a copy, you might close this and download your data first."
+          confirmLabel="Clear my data"
+          cancelLabel="Keep my data"
+          busy={clearing}
+          onConfirm={() => void handleClearData()}
+          onCancel={() => setClearSheetOpen(false)}
         />
       )}
     </div>
